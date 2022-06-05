@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
-from model_transformer import GPT_Torch
+from model_transformer import BERT_Torch
 from model_transfuser import GPT
     
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
 epsilon = 1e-6
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available else "cpu")
 
 # Initialize Policy weights
 def weights_init_(m):
@@ -33,7 +34,7 @@ class QNetwork(nn.Module):
         self.apply(weights_init_)
 
         # import transformer
-        self.transformer = GPT_Torch(ntoken=784, d_model=num_inputs + num_actions, nhead=2, d_hid=784, nlayers=2, dropout=0.2)
+        self.transformer = BERT_Torch(ntoken=784, d_model=num_inputs + num_actions, nhead=2, d_hid=784, nlayers=2, dropout=0.2)
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
@@ -78,12 +79,13 @@ class GaussianPolicy(nn.Module):
                 (action_space.high + action_space.low) / 2.)
 
         # import transformer
-        self.transformer = GPT_Torch(ntoken=784, d_model=num_inputs, nhead=2, d_hid=784, nlayers=2, dropout=0.2)
+        self.transformer = BERT_Torch(ntoken=784, d_model=num_inputs, nhead=2, d_hid=784, nlayers=2, dropout=0.2)
 
     def forward(self, state):
         # Transformer here
         if state.shape[-1] % 2 == 1:
-            state = torch.cat([state, torch.zeros(state.shape[0], 1).to("cuda")], 1)
+            # positional encoder requires even number of tokens
+            state = torch.cat([state, torch.zeros(state.shape[0], 1).to(DEVICE)], 1)
         state = self.transformer(state)
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
