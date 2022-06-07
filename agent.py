@@ -14,7 +14,7 @@ class SAC(object):
         self.alpha = 0.2
         self.lr = 0.0005
 
-        self.target_update_interval = 5000
+        self.target_update_interval = 100
         self.automatic_entropy_tuning = True
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available else "cpu")
