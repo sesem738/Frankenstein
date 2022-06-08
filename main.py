@@ -19,7 +19,6 @@ replay_size = 100000
 
 
 # Environment
-# env = NormalizedActions(gym.make(args.env_name))
 env = gym.make("Pendulum-v1")
 env.action_space.seed(1)
 
@@ -70,8 +69,6 @@ for i_episode in itertools.count(1):
         total_numsteps += 1
         episode_reward += reward
 
-        # Ignore the "done" signal if it comes from hitting the time horizon.
-        # (https://github.com/openai/spinningup/blob/master/spinup/algos/sac/sac.py)
         mask = 1 if episode_steps == env._max_episode_steps else float(not done)
 
         memory.push(state, action, reward, next_state, mask) # Append transition to memory
@@ -87,7 +84,7 @@ for i_episode in itertools.count(1):
     if i_episode % 10 == 0 and eval is True:
         avg_reward = 0.
         episodes = 10
-        if i_episode % 500 == 0:
+        if i_episode % 10 == 0:
             agent.save_checkpoint("Pendulum")
 
         for _  in range(episodes):
