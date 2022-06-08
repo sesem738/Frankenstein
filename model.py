@@ -22,24 +22,24 @@ class QNetwork(nn.Module):
         super(QNetwork, self).__init__()
 
         # Q1 architecture
-        self.linear1 = nn.Linear(784, 256)
+        self.linear1 = nn.Linear(num_inputs + num_actions, 256)
         self.linear2 = nn.Linear(256, 256)
         self.linear3 = nn.Linear(256, 1)
 
         # Q2 architecture
-        self.linear4 = nn.Linear(784, 256)
+        self.linear4 = nn.Linear(num_inputs + num_actions, 256)
         self.linear5 = nn.Linear(256, 256)
         self.linear6 = nn.Linear(256, 1)
 
         self.apply(weights_init_)
 
         # import transformer
-        self.transformer = BERT_Torch(ntoken=784, d_model=num_inputs + num_actions, nhead=2, d_hid=784, nlayers=2, dropout=0.2)
+        self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256, nlayers=2, dropout=0.2)
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
         # Transformer here
-        xu = self.transformer(xu)
+        xu = self.transformer(xu.transpose(0, 1)).transpose(0, 1)
         
         x1 = F.relu(self.linear1(xu))
         x1 = F.relu(self.linear2(x1))
@@ -57,10 +57,10 @@ class GaussianPolicy(nn.Module):
     def __init__(self, num_inputs, num_actions, action_space=None):
         super(GaussianPolicy, self).__init__()
 
-        if num_inputs % 2 == 1:
-            num_inputs += 1
+        # if num_inputs % 2 == 1:
+        #     num_inputs += 1
         
-        self.linear1 = nn.Linear(784, 256)
+        self.linear1 = nn.Linear(num_inputs, 256)
         self.linear2 = nn.Linear(256, 256)
 
         self.mean_linear = nn.Linear(256, num_actions)
@@ -79,14 +79,16 @@ class GaussianPolicy(nn.Module):
                 (action_space.high + action_space.low) / 2.)
 
         # import transformer
-        self.transformer = BERT_Torch(ntoken=784, d_model=num_inputs, nhead=2, d_hid=784, nlayers=2, dropout=0.2)
+        self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256, nlayers=2, dropout=0.2)
 
     def forward(self, state):
         # Transformer here
-        if state.shape[-1] % 2 == 1:
-            # positional encoder requires even number of tokens
-            state = torch.cat([state, torch.zeros(state.shape[0], 1).to(DEVICE)], 1)
-        state = self.transformer(state)
+        state = self.transformer(state.transpose(0, 1)).transpose(0, 1)
+        # if state.shape[-1] % 2 == 1:
+        #     # positional encoder requires even number of tokens
+        #     state = torch.cat([state, torch.zeros(state.shape[0], 1).to(DEVICE)], 1)
+        # state_t = self.transformer(state)
+        # state += state_t
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
         mean = self.mean_linear(x)
