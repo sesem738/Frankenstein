@@ -85,7 +85,7 @@ for i_episode in itertools.count(1):
         avg_reward = 0.
         episodes = 10
         if i_episode % 10 == 0:
-            agent.save_checkpoint("Pendulum")
+            agent.save_checkpoint(f'{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_SAC_checkpoint_{"pendulum"}')
 
         for _  in range(episodes):
             state = env.reset()
