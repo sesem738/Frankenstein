@@ -7,6 +7,7 @@ import pathlib
 import numpy as np
 from agent import SAC
 from collections import deque
+import sys
 from torch.utils.tensorboard import SummaryWriter
 
 seed = 0
@@ -18,8 +19,8 @@ np.random.seed(seed)
 env = gym.make('Pendulum-v1')
 
 agent = SAC(env.observation_space.shape[0], env.action_space)
-agent.load_checkpoint('checkpoints/sac_checkpoint_Pendulum_', True)
-writer = SummaryWriter('runs/{}_SAC_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'Pendulum'))
+agent.load_checkpoint(sys.argv[1], True)
+# writer = SummaryWriter('runs/{}_SAC_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'Pendulum'))
 
 scores_deque = deque(maxlen=100)
 scores = []
