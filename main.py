@@ -29,7 +29,8 @@ np.random.seed(1)
 agent = SAC(env.observation_space.shape[0], env.action_space)
 
 #Tesnorboard
-writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), "Pendulum",
+current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(current_time, "Pendulum",
                                                              "Gaussian", "autotune"))
 
 # Memory
@@ -85,7 +86,7 @@ for i_episode in itertools.count(1):
         avg_reward = 0.
         episodes = 10
         if i_episode % 10 == 0:
-            agent.save_checkpoint(f'{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_SAC_checkpoint_{"pendulum"}')
+            agent.save_checkpoint(f'Pendulum_{current_time}', str(i_episode))
 
         for _  in range(episodes):
             state = env.reset()
