@@ -44,15 +44,16 @@ class QNetwork(nn.Module):
 
         # Continuous embedding
         xu = self.embedding(xu)
-        xu_past, xu_current = xu[:-1, :], xu[-1, :].expand(1,-1)
+        # xu_past, xu_current = xu[:-1, :], xu[-1, :].expand(1,-1)
         # print("*********************************************************")
         # print(xu_past.shape, xu_current.shape)
         # Transformer here
-        xu_past += self.transformer(xu_past)
+        # xu_past = self.transformer(xu_past)
+        xu = self.transformer(xu)
         # print(xu_past.shape, xu_current.shape)
         # print(xu_past,xu_current)
         # print("*********************************************************")
-        xu = torch.cat([xu_past, xu_current], 0)
+        # xu = torch.cat([xu_past, xu_current], 0)
         
         x1 = F.relu(self.linear1(xu))
         x1 = F.relu(self.linear2(x1))
@@ -98,11 +99,12 @@ class GaussianPolicy(nn.Module):
 
         # Continuous embedding
         state = self.embedding(state)
-        state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
+        # state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
 
         # Transformer here
-        state_past += self.transformer(state_past)
-        state = torch.cat([state_past, state_current], 0)
+        # state_past = self.transformer(state_past)
+        state = self.transformer(state)
+        # state = torch.cat([state_past, state_current], 0)
 
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
