@@ -21,13 +21,16 @@ class QNetwork(nn.Module):
     def __init__(self, num_inputs, num_actions):
         super(QNetwork, self).__init__()
 
+        # Continuous embedding
+        self.embedding = nn.Linear(num_inputs + num_actions, 256)
+
         # Q1 architecture
-        self.linear1 = nn.Linear(num_inputs + num_actions, 256)
+        self.linear1 = nn.Linear(256, 256)
         self.linear2 = nn.Linear(256, 256)
         self.linear3 = nn.Linear(256, 1)
 
         # Q2 architecture
-        self.linear4 = nn.Linear(num_inputs + num_actions, 256)
+        self.linear4 = nn.Linear(256, 256)
         self.linear5 = nn.Linear(256, 256)
         self.linear6 = nn.Linear(256, 1)
 
@@ -38,8 +41,18 @@ class QNetwork(nn.Module):
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
+
+        # Continuous embedding
+        xu = self.embedding(xu)
+        xu_past, xu_current = xu[:-1, :], xu[-1, :].expand(1,-1)
+        # print("*********************************************************")
+        # print(xu_past.shape, xu_current.shape)
         # Transformer here
-        xu = self.transformer(xu.transpose(0, 1)).transpose(0, 1)
+        xu_past += self.transformer(xu_past)
+        # print(xu_past.shape, xu_current.shape)
+        # print(xu_past,xu_current)
+        # print("*********************************************************")
+        xu = torch.cat([xu_past, xu_current], 0)
         
         x1 = F.relu(self.linear1(xu))
         x1 = F.relu(self.linear2(x1))
@@ -57,10 +70,10 @@ class GaussianPolicy(nn.Module):
     def __init__(self, num_inputs, num_actions, action_space=None):
         super(GaussianPolicy, self).__init__()
 
-        # if num_inputs % 2 == 1:
-        #     num_inputs += 1
-        
-        self.linear1 = nn.Linear(num_inputs, 256)
+        # Continuous embedding
+        self.embedding = nn.Linear(num_inputs, 256)
+
+        self.linear1 = nn.Linear(256, 256)
         self.linear2 = nn.Linear(256, 256)
 
         self.mean_linear = nn.Linear(256, num_actions)
@@ -82,13 +95,15 @@ class GaussianPolicy(nn.Module):
         self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256, nlayers=2, dropout=0.2)
 
     def forward(self, state):
+
+        # Continuous embedding
+        state = self.embedding(state)
+        state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
+
         # Transformer here
-        state = self.transformer(state.transpose(0, 1)).transpose(0, 1)
-        # if state.shape[-1] % 2 == 1:
-        #     # positional encoder requires even number of tokens
-        #     state = torch.cat([state, torch.zeros(state.shape[0], 1).to(DEVICE)], 1)
-        # state_t = self.transformer(state)
-        # state += state_t
+        state_past += self.transformer(state_past)
+        state = torch.cat([state_past, state_current], 0)
+
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
         mean = self.mean_linear(x)

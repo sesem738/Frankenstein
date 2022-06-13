@@ -69,7 +69,6 @@ class BERT_Torch(nn.Module):
             output Tensor of shape [seq_len, batch_size, ntoken]
         """
         src = self.pos_encoder(src)
-        print(src.shape)
         output = self.transformer_encoder(src, generate_square_subsequent_mask(src.size(0)))
         # output = self.decoder(output)
         return output
