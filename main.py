@@ -1,13 +1,17 @@
+import gym
+import torch
 import argparse
 import datetime
-import gym
-import numpy as np
+import highway_env
 import itertools
-import torch
+import numpy as np
 from agent import SAC
-from torch.utils.tensorboard import SummaryWriter
 from memory import ReplayMemory
+from envs.pomdp_wrapper import POMDPWrapper
+from torch.utils.tensorboard import SummaryWriter
 
+import warnings
+warnings.simplefilter("ignore")
 
 updates_per_step = 1
 eval = True
@@ -19,18 +23,22 @@ replay_size = 100000
 
 
 # Environment
-env = gym.make("Pendulum-v1")
+env_name = "racetrack-v0"
+env = POMDPWrapper(env_name, 'nothing')
+# env = gym.make("Pendulum-v1")
 env.action_space.seed(1)
 
 torch.manual_seed(1)
 np.random.seed(1)
 
 # Agent
-agent = SAC(env.observation_space.shape[0], env.action_space)
+# print(env.observation_space)
+agent = SAC(288, env.action_space)
+
 
 #Tesnorboard
 current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(current_time, "Pendulum",
+writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(current_time, env_name,
                                                              "Gaussian", "autotune"))
 
 # Memory
@@ -70,7 +78,7 @@ for i_episode in itertools.count(1):
         total_numsteps += 1
         episode_reward += reward
 
-        mask = 1 if episode_steps == env._max_episode_steps else float(not done)
+        mask = 1 if episode_steps == 5000 else float(not done) # ******COME BACK TO THIS********
 
         memory.push(state, action, reward, next_state, mask) # Append transition to memory
 
@@ -86,7 +94,7 @@ for i_episode in itertools.count(1):
         avg_reward = 0.
         episodes = 10
         if i_episode % 10 == 0:
-            agent.save_checkpoint(f'Pendulum_{current_time}', str(i_episode))
+            agent.save_checkpoint(f'{env_name}_{current_time}', str(i_episode))
 
         for _  in range(episodes):
             state = env.reset()

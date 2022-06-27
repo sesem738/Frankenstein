@@ -8,7 +8,6 @@ from model_transfuser import GPT
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
 epsilon = 1e-6
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available else "cpu")
 
 # Initialize Policy weights
 def weights_init_(m):
