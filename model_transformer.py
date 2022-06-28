@@ -52,7 +52,7 @@ class BERT_Torch(nn.Module):
         super().__init__()
 
         self.pos_encoder = PositionalEncoding(d_model, dropout)
-        encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
+        encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout, batch_first=True)
         encoder_norm = LayerNorm(d_model, eps=layer_norm_eps)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers, encoder_norm)
 
@@ -68,7 +68,7 @@ class BERT_Torch(nn.Module):
         Returns:
             output Tensor of shape [seq_len, batch_size, ntoken]
         """
-        src = self.pos_encoder(src)
+        # src = self.pos_encoder(src)
         output = self.transformer_encoder(src, generate_square_subsequent_mask(src.size(0)))
         # output = self.decoder(output)
         return output

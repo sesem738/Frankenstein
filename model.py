@@ -8,6 +8,9 @@ from model_transfuser import GPT
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
 epsilon = 1e-6
+NHEAD = 4
+NLAYERS = 1
+DROPOUT = 0.1
 
 # Initialize Policy weights
 def weights_init_(m):
@@ -36,7 +39,8 @@ class QNetwork(nn.Module):
         self.apply(weights_init_)
 
         # import transformer
-        self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256, nlayers=2, dropout=0.2)
+        # self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256*4, nlayers=2, dropout=0.2)
+        self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
@@ -92,7 +96,7 @@ class GaussianPolicy(nn.Module):
                 (action_space.high + action_space.low) / 2.)
 
         # import transformer
-        self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256, nlayers=2, dropout=0.2)
+        self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
 
     def forward(self, state):
 
