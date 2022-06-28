@@ -2,6 +2,11 @@ import gym
 import torch
 import argparse
 import datetime
+
+# Suppress DeprecationWarning before importing highway_env
+import warnings
+warnings.simplefilter("ignore")
+
 import highway_env
 import itertools
 import numpy as np
@@ -9,9 +14,6 @@ from agent import SAC
 from memory import ReplayMemory
 from envs.pomdp_wrapper import POMDPWrapper
 from torch.utils.tensorboard import SummaryWriter
-
-import warnings
-warnings.simplefilter("ignore")
 
 updates_per_step = 1
 eval = True
@@ -25,15 +27,13 @@ replay_size = 100000
 # Environment
 env_name = "racetrack-v0"
 env = POMDPWrapper(env_name, 'nothing')
-# env = gym.make("Pendulum-v1")
 env.action_space.seed(1)
 
 torch.manual_seed(1)
 np.random.seed(1)
 
 # Agent
-# print(env.observation_space)
-agent = SAC(288, env.action_space)
+agent = SAC(np.prod(env.observation_space.shape), env.action_space)
 
 
 #Tesnorboard

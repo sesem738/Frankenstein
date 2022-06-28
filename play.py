@@ -4,6 +4,11 @@ import torch
 import datetime
 import itertools
 import pathlib
+
+# Suppress DeprecationWarning before importing highway_env
+import warnings
+warnings.simplefilter("ignore")
+
 import highway_env
 import numpy as np
 from agent import SAC
@@ -12,8 +17,6 @@ import sys
 from envs.pomdp_wrapper import POMDPWrapper
 from torch.utils.tensorboard import SummaryWriter
 
-import warnings
-warnings.simplefilter("ignore")
 
 seed = 0
 eval = True
@@ -21,12 +24,11 @@ episodes = 100
 torch.manual_seed(seed)
 np.random.seed(seed)
 
-# env = gym.make('Pendulum-v1')
-env = POMDPWrapper("racetrack-v0", 'flickering')
+env_name = "racetrack-v0"
+env = POMDPWrapper(env_name, 'nothing')
 
-agent = SAC(288, env.action_space)
+agent = SAC(np.prod(env.observation_space.shape), env.action_space)
 agent.load_checkpoint(sys.argv[1], True)
-# writer = SummaryWriter('runs/{}_SAC_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'Pendulum'))
 
 scores_deque = deque(maxlen=100)
 scores = []
