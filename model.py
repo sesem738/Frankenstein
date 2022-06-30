@@ -20,11 +20,10 @@ def weights_init_(m):
 
 # Critic
 class QNetwork(nn.Module):
-    def __init__(self, num_inputs, num_actions):
+    def __init__(self, num_inputs, num_actions, model=None):
         super(QNetwork, self).__init__()
 
-        # Continuous embedding
-        self.embedding = nn.Linear(num_inputs + num_actions, 256)
+        self.model = model
 
         # Q1 architecture
         self.linear1 = nn.Linear(256, 256)
@@ -36,27 +35,32 @@ class QNetwork(nn.Module):
         self.linear5 = nn.Linear(256, 256)
         self.linear6 = nn.Linear(256, 1)
 
-        self.apply(weights_init_)
+        if self.model == "transformer":
+            # Continuous embedding
+            self.embedding = nn.Linear(num_inputs + num_actions, 256)
 
-        # import transformer
-        # self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256*4, nlayers=2, dropout=0.2)
-        self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
+            # Init transformer
+            # self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256*4, nlayers=2, dropout=0.2)
+            self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
+
+        self.apply(weights_init_)
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
 
-        # Continuous embedding
-        xu = self.embedding(xu)
-        # xu_past, xu_current = xu[:-1, :], xu[-1, :].expand(1,-1)
-        # print("*********************************************************")
-        # print(xu_past.shape, xu_current.shape)
-        # Transformer here
-        # xu_past = self.transformer(xu_past)
-        xu = self.transformer(xu)
-        # print(xu_past.shape, xu_current.shape)
-        # print(xu_past,xu_current)
-        # print("*********************************************************")
-        # xu = torch.cat([xu_past, xu_current], 0)
+        if self.model == "transformer":
+            # Continuous embedding
+            xu = self.embedding(xu)
+            # xu_past, xu_current = xu[:-1, :], xu[-1, :].expand(1,-1)
+            # print("*********************************************************")
+            # print(xu_past.shape, xu_current.shape)
+            # Transformer here
+            # xu_past = self.transformer(xu_past)
+            xu = self.transformer(xu)
+            # print(xu_past.shape, xu_current.shape)
+            # print(xu_past,xu_current)
+            # print("*********************************************************")
+            # xu = torch.cat([xu_past, xu_current], 0)
         
         x1 = F.relu(self.linear1(xu))
         x1 = F.relu(self.linear2(x1))
@@ -71,11 +75,11 @@ class QNetwork(nn.Module):
 # Actor 
 class GaussianPolicy(nn.Module):
     
-    def __init__(self, num_inputs, num_actions, action_space=None):
+    def __init__(self, num_inputs, num_actions, action_space=None, model=None):
         super(GaussianPolicy, self).__init__()
 
-        # Continuous embedding
-        self.embedding = nn.Linear(num_inputs, 256)
+        self.model = model
+
 
         self.linear1 = nn.Linear(256, 256)
         self.linear2 = nn.Linear(256, 256)
@@ -83,7 +87,6 @@ class GaussianPolicy(nn.Module):
         self.mean_linear = nn.Linear(256, num_actions)
         self.log_std_linear = nn.Linear(256, num_actions)
 
-        self.apply(weights_init_)
 
         # action rescaling
         if action_space is None:
@@ -95,19 +98,25 @@ class GaussianPolicy(nn.Module):
             self.action_bias = torch.FloatTensor(
                 (action_space.high + action_space.low) / 2.)
 
-        # import transformer
-        self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
+        if self.model == "transformer":
+            # Continuous embedding
+            self.embedding = nn.Linear(num_inputs, 256)
 
+            # import transformer
+            self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
+        
+        self.apply(weights_init_)
     def forward(self, state):
 
-        # Continuous embedding
-        state = self.embedding(state)
-        # state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
+        if self.model == "transformer":
+            # Continuous embedding
+            state = self.embedding(state)
+            # state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
 
-        # Transformer here
-        # state_past = self.transformer(state_past)
-        state = self.transformer(state)
-        # state = torch.cat([state_past, state_current], 0)
+            # Transformer here
+            # state_past = self.transformer(state_past)
+            state = self.transformer(state)
+            # state = torch.cat([state_past, state_current], 0)
 
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))

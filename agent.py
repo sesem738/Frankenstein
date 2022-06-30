@@ -7,7 +7,7 @@ from model import GaussianPolicy, QNetwork
 
 
 class SAC(object):
-    def __init__(self, num_inputs, action_space):
+    def __init__(self, num_inputs, action_space, model:str=None):
 
         self.gamma = 0.99
         self.tau = 0.005
@@ -19,10 +19,10 @@ class SAC(object):
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available else "cpu")
 
-        self.critic = QNetwork(num_inputs, action_space.shape[0]).to(device=self.device)
+        self.critic = QNetwork(num_inputs, action_space.shape[0], model).to(device=self.device)
         self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
 
-        self.critic_target = QNetwork(num_inputs, action_space.shape[0]).to(self.device)
+        self.critic_target = QNetwork(num_inputs, action_space.shape[0], model).to(self.device)
         hard_update(self.critic_target, self.critic)
 
         # Target Entropy = −dim(A) (e.g. , -6 for HalfCheetah-v2) as given in the paper
@@ -31,7 +31,7 @@ class SAC(object):
             self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
             self.alpha_optim = Adam([self.log_alpha], lr=self.lr)
 
-        self.policy = GaussianPolicy(num_inputs, action_space.shape[0], action_space).to(self.device)
+        self.policy = GaussianPolicy(num_inputs, action_space.shape[0], action_space, model).to(self.device)
         self.policy_optim = Adam(self.policy.parameters(), lr=self.lr)
 
     def select_action(self, state, evaluate=False):
