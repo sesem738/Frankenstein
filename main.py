@@ -26,7 +26,7 @@ replay_size = 100000
 
 # Environment
 env_name = "racetrack-v0"
-env = POMDPWrapper(env_name, 'nothing')
+env = POMDPWrapper(env_name, 'flickering')
 env.action_space.seed(1)
 
 torch.manual_seed(1)
@@ -42,7 +42,7 @@ writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(current_time, env_name,
                                                              "Gaussian", "autotune"))
 
 # Memory
-memory = ReplayMemory(replay_size, 1)
+memory = ReplayMemory(replay_size, 1, np.prod(env.observation_space.shape), np.prod(env.action_space.shape))
 
 # Training Loop
 total_numsteps = 0
@@ -80,7 +80,7 @@ for i_episode in itertools.count(1):
 
         mask = 1 if episode_steps == 5000 else float(not done) # ******COME BACK TO THIS********
 
-        memory.push(state, action, reward, next_state, mask) # Append transition to memory
+        memory.store(state, action, reward, next_state, mask) # Append transition to memory
 
         state = next_state
 

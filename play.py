@@ -25,7 +25,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 env_name = "racetrack-v0"
-env = POMDPWrapper(env_name, 'nothing')
+env = POMDPWrapper(env_name, 'flickering')
 
 agent = SAC(np.prod(env.observation_space.shape), env.action_space)
 agent.load_checkpoint(sys.argv[1], True)
