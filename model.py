@@ -2,15 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
-from model_transformer import BERT_Torch
-from model_transfuser import GPT
+import model_transformer as mt
     
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
 epsilon = 1e-6
 NHEAD = 4
-NLAYERS = 1
-DROPOUT = 0.1
+NLAYERS = 2
+DROPOUT = 0.2
 
 # Initialize Policy weights
 def weights_init_(m):
@@ -26,29 +25,32 @@ class QNetwork(nn.Module):
         self.model = model
 
         # Q1 architecture
-        self.linear1 = nn.Linear(256, 256)
+        self.linear1 = nn.Linear(num_inputs + num_actions, 256)
         self.linear2 = nn.Linear(256, 256)
         self.linear3 = nn.Linear(256, 1)
 
         # Q2 architecture
-        self.linear4 = nn.Linear(256, 256)
+        self.linear4 = nn.Linear(num_inputs + num_actions, 256)
         self.linear5 = nn.Linear(256, 256)
         self.linear6 = nn.Linear(256, 1)
 
-        if self.model == "transformer":
+        if self.model in ["BERT", "GTrXL"]:
             # Continuous embedding
             self.embedding = nn.Linear(num_inputs + num_actions, 256)
+            self.linear1 = nn.Linear(256, 256)
+            self.linear4 = nn.Linear(256, 256)
 
             # Init transformer
             # self.transformer = BERT_Torch(ntoken=256, d_model=256, nhead=4, d_hid=256*4, nlayers=2, dropout=0.2)
-            self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
+            # self.transformer = GTrXL(256, NHEAD, NLAYERS)
+            self.transformer = getattr(mt, self.model)(ntoken=256, d_model=256, nhead=NHEAD, d_hid=256*4, nlayers=NLAYERS, dropout=DROPOUT)
 
         self.apply(weights_init_)
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
 
-        if self.model == "transformer":
+        if self.model in ["BERT", "GTrXL"]:
             # Continuous embedding
             xu = self.embedding(xu)
             # xu_past, xu_current = xu[:-1, :], xu[-1, :].expand(1,-1)
@@ -81,7 +83,7 @@ class GaussianPolicy(nn.Module):
         self.model = model
 
 
-        self.linear1 = nn.Linear(256, 256)
+        self.linear1 = nn.Linear(num_inputs, 256)
         self.linear2 = nn.Linear(256, 256)
 
         self.mean_linear = nn.Linear(256, num_actions)
@@ -98,17 +100,19 @@ class GaussianPolicy(nn.Module):
             self.action_bias = torch.FloatTensor(
                 (action_space.high + action_space.low) / 2.)
 
-        if self.model == "transformer":
+        if self.model in ["BERT", "GTrXL"]:
             # Continuous embedding
             self.embedding = nn.Linear(num_inputs, 256)
+            self.linear1 = nn.Linear(256, 256)
 
             # import transformer
-            self.transformer = BERT_Torch(256, 256, NHEAD, 2048, NLAYERS, DROPOUT)
-        
+            # self.transformer = GTrXL(256, NHEAD, NLAYERS)
+            self.transformer = getattr(mt, self.model)(ntoken=256, d_model=256, nhead=NHEAD, d_hid=256*4, nlayers=NLAYERS, dropout=DROPOUT)        
+
         self.apply(weights_init_)
     def forward(self, state):
 
-        if self.model == "transformer":
+        if self.model in ["BERT", "GTrXL"]:
             # Continuous embedding
             state = self.embedding(state)
             # state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
