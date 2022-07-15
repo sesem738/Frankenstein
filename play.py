@@ -21,7 +21,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 # env = gym.make('Pendulum-v1')
-env = POMDPWrapper("racetrack-v0", 'flickering')
+env = POMDPWrapper("racetrack-v0", 'nothing')
 
 agent = SAC(288, env.action_space)
 agent.load_checkpoint('checkpoints/sac_checkpoint_Pendulum_2022-06-27_12-01-53_SAC', True)
