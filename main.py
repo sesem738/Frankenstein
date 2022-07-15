@@ -84,7 +84,7 @@ for i_episode in itertools.count(1):
 
         mask = 1 if episode_steps == 5000 else float(not done) # ******COME BACK TO THIS********
 
-        memory.push(state, action, reward, next_state, mask) # Append transition to memory
+        memory.push(state, action, next_state, reward, mask) # Append transition to memory
 
         state = next_state
 
