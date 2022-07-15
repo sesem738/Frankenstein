@@ -1,3 +1,4 @@
+from statistics import mode
 import gym
 import time
 import torch
@@ -27,7 +28,7 @@ np.random.seed(seed)
 env_name = "racetrack-v0"
 env = POMDPWrapper(env_name, 'nothing')
 
-agent = SAC(np.prod(env.observation_space.shape), env.action_space)
+agent = SAC(np.prod(env.observation_space.shape), env.action_space, model="GTrXL")
 agent.load_checkpoint(sys.argv[1], True)
 
 scores_deque = deque(maxlen=100)

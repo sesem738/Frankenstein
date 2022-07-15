@@ -15,6 +15,10 @@ from memory import ReplayMemory
 from envs.pomdp_wrapper import POMDPWrapper
 from torch.utils.tensorboard import SummaryWriter
 
+if torch.cuda.is_available():
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+
 updates_per_step = 1
 eval = True
 seed = 0
@@ -33,7 +37,7 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 # Agent
-agent = SAC(np.prod(env.observation_space.shape), env.action_space)
+agent = SAC(np.prod(env.observation_space.shape), env.action_space, model="GTrXL")
 
 
 #Tesnorboard
