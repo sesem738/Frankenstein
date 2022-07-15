@@ -11,7 +11,7 @@ import highway_env
 import itertools
 import numpy as np
 from agent import SAC
-from memory import ReplayMemory
+from replay import ReplayBuffer
 from envs.pomdp_wrapper import POMDPWrapper
 from torch.utils.tensorboard import SummaryWriter
 
@@ -46,7 +46,7 @@ writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(current_time, env_name,
                                                              "Gaussian", "autotune"))
 
 # Memory
-memory = ReplayMemory(replay_size, 1)
+memory = ReplayBuffer(np.prod(env.observation_space.shape), np.prod(env.action_space.shape), replay_size)
 
 # Training Loop
 total_numsteps = 0

@@ -67,3 +67,6 @@ class ReplayBuffer(object):
             torch.FloatTensor(rewards).to(self.device),
             torch.FloatTensor(done).to(self.device)
         )
+    
+    def __len__(self):
+        return self.size
