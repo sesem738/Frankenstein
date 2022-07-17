@@ -37,7 +37,7 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 # Agent
-agent = SAC(np.prod(env.observation_space.shape), env.action_space, model="GTrXL")
+agent = SAC(288, env.action_space, model="GTrXL")
 
 
 #Tesnorboard
@@ -65,6 +65,7 @@ for i_episode in itertools.count(1):
             action = agent.select_action(state)  # Sample action from policy
 
         if len(memory) > batch_size:
+            print('Trying update ...')
             # Number of updates per step in environment
             for i in range(updates_per_step):
                 # Update parameters of all the networks
@@ -82,7 +83,7 @@ for i_episode in itertools.count(1):
         total_numsteps += 1
         episode_reward += reward
 
-        mask = 1 if episode_steps == 5000 else float(not done) # ******COME BACK TO THIS********
+        mask = 1 if episode_steps == 5000 else float(done) # ******COME BACK TO THIS********
 
         memory.push(state, action, next_state, reward, mask) # Append transition to memory
 
@@ -109,7 +110,6 @@ for i_episode in itertools.count(1):
 
                 next_state, reward, done, _ = env.step(action)
                 episode_reward += reward
-
 
                 state = next_state
             avg_reward += episode_reward

@@ -48,7 +48,7 @@ class QNetwork(nn.Module):
         self.apply(weights_init_)
 
     def forward(self, state, action):
-        xu = torch.cat([state, action], 1)
+        xu = torch.cat([state, action], -1)
 
         if self.model in ["BERT", "GTrXL"]:
             # Continuous embedding

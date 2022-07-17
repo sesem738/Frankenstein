@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 
 class ReplayBuffer(object):
@@ -15,8 +14,6 @@ class ReplayBuffer(object):
         self.reward = np.zeros((self.max_size, 1))
         self.done = np.zeros((self.max_size, 1))
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     def push(self, state, action, next_state, reward, done):
         self.state[self.ptr] = state
         self.action[self.ptr] = action
@@ -31,11 +28,11 @@ class ReplayBuffer(object):
         ind = np.random.randint(0, self.size, size=batch_size)
         
         return (
-			torch.FloatTensor(self.state[ind]).to(self.device),
-			torch.FloatTensor(self.action[ind]).to(self.device),
-			torch.FloatTensor(self.next_state[ind]).to(self.device),
-			torch.FloatTensor(self.reward[ind]).to(self.device),
-			torch.FloatTensor(self.done[ind]).to(self.device)
+			self.state[ind],
+			self.action[ind],
+			self.next_state[ind],
+			self.reward[ind],
+			self.done[ind]
 		)
 
     def prior_samples(self, batch_size, his_len):
@@ -46,27 +43,23 @@ class ReplayBuffer(object):
         next_obs = np.zeros([batch_size, his_len, self.state_dim])
         rewards = np.zeros([batch_size, his_len, 1])
         done = np.zeros([batch_size, his_len, 1])
-        his_obs_len = his_len * np.ones(batch_size)
+        # his_obs_len = his_len * np.ones(batch_size)
 
         for i, id in enumerate(ind):
             start_id = id-his_len
             if start_id < 0:
                 start_id = 0
             if len(np.where(self.done[start_id:id] == 1)[0]) != 0:
-                    start_id = start_id + (np.where(self.done[start_id:id] == 1)[0][-1]) + 1
+                print(self.done[start_id:id] == 1)
+                start_id = start_id + (np.where(self.done[start_id:id] == 1)[0][-1]) + 1
+                print(f'Start {start_id} and end {id}')
             obs[i] = self.state[start_id:id]
             actions[i] = self.action[start_id:id]
             next_obs[i] = self.next_state[start_id:id]
             rewards[i] = self.reward[start_id:id]
             done[i] = self.done[start_id:id]
 
-        return (
-            torch.FloatTensor(obs).to(self.device),
-            torch.FloatTensor(actions).to(self.device),
-            torch.FloatTensor(next_obs).to(self.device),
-            torch.FloatTensor(rewards).to(self.device),
-            torch.FloatTensor(done).to(self.device)
-        )
+        return (obs, actions, next_obs, rewards, done)
     
     def __len__(self):
         return self.size
