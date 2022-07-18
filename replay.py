@@ -49,7 +49,7 @@ class ReplayBuffer(object):
             start_id = id-his_len
             if start_id < 0:
                 start_id = 0
-            if len(np.where(self.done[start_id:id] == 1)[0]) != 0:
+            if len(np.where(self.done[start_id:id] == 1)[0]) != 0: ### INSPECT ####
                 print(self.done[start_id:id] == 1)
                 start_id = start_id + (np.where(self.done[start_id:id] == 1)[0][-1]) + 1
                 id = start_id + his_len
