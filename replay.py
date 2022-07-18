@@ -52,7 +52,7 @@ class ReplayBuffer(object):
             if len(np.where(self.done[start_id:id] == 1)[0]) != 0:
                 print(self.done[start_id:id] == 1)
                 start_id = start_id + (np.where(self.done[start_id:id] == 1)[0][-1]) + 1
-                print(f'Start {start_id} and end {id}')
+                id = start_id + his_len
             obs[i] = self.state[start_id:id]
             actions[i] = self.action[start_id:id]
             next_obs[i] = self.next_state[start_id:id]
