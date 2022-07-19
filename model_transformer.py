@@ -192,6 +192,6 @@ class GTrXL(nn.Module):
         """
         # src = self.pos_encoder(src)
         output = self.transformer_encoder(
-            src, generate_square_subsequent_mask(src.size(0))
+            src, generate_square_subsequent_mask(src.size(-2))
         )
         return output
