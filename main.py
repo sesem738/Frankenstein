@@ -37,7 +37,7 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 # Agent
-agent = SAC(288, env.action_space, model="GTrXL")
+agent = SAC(np.prod(env.observation_space.shape), env.action_space, model="GTrXL")
 
 
 #Tesnorboard
