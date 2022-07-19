@@ -48,6 +48,10 @@ class QNetwork(nn.Module):
         self.apply(weights_init_)
 
     def forward(self, state, action):
+        if self.model not in ["BERT", "GTrXL"]:
+            state = state[:,[0],:]
+            action = action[:,[0],:]
+
         xu = torch.cat([state, action], -1)
 
         if self.model in ["BERT", "GTrXL"]:
@@ -95,9 +99,9 @@ class GaussianPolicy(nn.Module):
             self.action_scale = torch.tensor(1.)
             self.action_bias = torch.tensor(0.)
         else:
-            self.action_scale = torch.FloatTensor(
+            self.action_scale = torch.Tensor(
                 (action_space.high - action_space.low) / 2.)
-            self.action_bias = torch.FloatTensor(
+            self.action_bias = torch.Tensor(
                 (action_space.high + action_space.low) / 2.)
 
         if self.model in ["BERT", "GTrXL"]:
@@ -107,7 +111,7 @@ class GaussianPolicy(nn.Module):
 
             # import transformer
             # self.transformer = GTrXL(256, NHEAD, NLAYERS)
-            self.transformer = getattr(mt, self.model)(ntoken=256, d_model=256, nhead=NHEAD, d_hid=256*4, nlayers=NLAYERS, dropout=DROPOUT)        
+            self.transformer = getattr(mt, self.model)(ntoken=256, d_model=256, nhead=NHEAD, d_hid=256*4, nlayers=NLAYERS, dropout=DROPOUT)
 
         self.apply(weights_init_)
     def forward(self, state):
@@ -121,6 +125,11 @@ class GaussianPolicy(nn.Module):
             # state_past = self.transformer(state_past)
             state = self.transformer(state)
             # state = torch.cat([state_past, state_current], 0)
+        else:
+            try:
+                state = state[:,[0],:]
+            except:
+                print(state.shape)
 
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
@@ -143,9 +152,3 @@ class GaussianPolicy(nn.Module):
         log_prob = log_prob.sum(1, keepdim=True)
         mean = torch.tanh(mean) * self.action_scale + self.action_bias
         return action, log_prob, mean
-
-    def to(self, device):
-        self.action_scale = self.action_scale.to(device)
-        self.action_bias = self.action_bias.to(device)
-        return super(GaussianPolicy, self).to(device)
-

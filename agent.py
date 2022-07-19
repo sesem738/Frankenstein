@@ -20,23 +20,23 @@ class SAC(object):
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available else "cpu")
 
-        self.critic = QNetwork(num_inputs, action_space.shape[0], model).to(device=self.device)
+        self.critic = QNetwork(num_inputs, action_space.shape[0], model)
         self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
 
-        self.critic_target = QNetwork(num_inputs, action_space.shape[0], model).to(self.device)
+        self.critic_target = QNetwork(num_inputs, action_space.shape[0], model)
         hard_update(self.critic_target, self.critic)
 
         # Target Entropy = −dim(A) (e.g. , -6 for HalfCheetah-v2) as given in the paper
         if self.automatic_entropy_tuning is True:
-            self.target_entropy = -torch.prod(torch.Tensor(action_space.shape).to(self.device)).item()
+            self.target_entropy = -torch.prod(torch.Tensor(action_space.shape)).item()
             self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
             self.alpha_optim = Adam([self.log_alpha], lr=self.lr)
 
-        self.policy = GaussianPolicy(num_inputs, action_space.shape[0], action_space, model).to(self.device)
+        self.policy = GaussianPolicy(num_inputs, action_space.shape[0], action_space, model)
         self.policy_optim = Adam(self.policy.parameters(), lr=self.lr)
 
     def select_action(self, state, evaluate=False):
-        state = torch.FloatTensor(state).to(self.device).unsqueeze(0)
+        state = torch.Tensor(state).unsqueeze(0)
         if evaluate is False:
             action, _, _ = self.policy.sample(state)
         else:
@@ -47,11 +47,11 @@ class SAC(object):
         # Sample a batch from memory
         state_batch, action_batch, next_state_batch, reward_batch, mask_batch = memory.prior_samples(batch_size, his_len=5)
 
-        state_batch = torch.FloatTensor(state_batch).to(self.device)
-        next_state_batch = torch.FloatTensor(next_state_batch).to(self.device)
-        action_batch = torch.FloatTensor(action_batch).to(self.device)
-        reward_batch = torch.FloatTensor(reward_batch).to(self.device).unsqueeze(1)
-        mask_batch = torch.FloatTensor(mask_batch).to(self.device).unsqueeze(1)
+        state_batch = torch.Tensor(state_batch)
+        next_state_batch = torch.Tensor(next_state_batch)
+        action_batch = torch.Tensor(action_batch)
+        reward_batch = torch.Tensor(reward_batch).unsqueeze(1)
+        mask_batch = torch.Tensor(mask_batch).unsqueeze(1)
 
         with torch.no_grad():
             next_state_action, next_state_log_pi, _ = self.policy.sample(next_state_batch)
@@ -88,7 +88,7 @@ class SAC(object):
             self.alpha = self.log_alpha.exp()
             alpha_tlogs = self.alpha.clone() # For TensorboardX logs
         else:
-            alpha_loss = torch.tensor(0.).to(self.device)
+            alpha_loss = torch.tensor(0.)
             alpha_tlogs = torch.tensor(self.alpha) # For TensorboardX logs
 
 
