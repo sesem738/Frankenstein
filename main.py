@@ -11,6 +11,7 @@ import highway_env
 import itertools
 import numpy as np
 from agent import SAC
+from collections import deque
 from replay import ReplayBuffer
 from envs.pomdp_wrapper import POMDPWrapper
 from torch.utils.tensorboard import SummaryWriter
@@ -22,6 +23,7 @@ if torch.cuda.is_available():
 updates_per_step = 1
 eval = True
 seed = 0
+his_len    = 5
 batch_size = 256
 num_steps = 10000001
 start_steps = 1000
@@ -32,6 +34,9 @@ replay_size = 100000
 env_name = "racetrack-v0"
 env = POMDPWrapper(env_name, 'nothing')
 env.action_space.seed(1)
+
+obs_dim = np.prod(env.observation_space.shape)
+act_dim = env.action_space
 
 torch.manual_seed(1)
 np.random.seed(1)
@@ -58,18 +63,26 @@ for i_episode in itertools.count(1):
     done = False
     state = env.reset()
 
+    buffer     = np.zeros([1, obs_dim])
+    obs_buffer = deque([np.zeros(buffer.shape)]*his_len, maxlen=his_len)
+
+
     while not done:
+        obs_buffer.append([state])
+        assert np.array(obs_buffer).shape == (his_len, 1, obs_dim)
+        buffer = np.array(obs_buffer).reshape(1,his_len, obs_dim)
+
         if start_steps > total_numsteps:
             action = env.action_space.sample()  # Sample random action
         else:
-            action = agent.select_action(state)  # Sample action from policy
+            print("Triggered")
+            action = agent.select_action(buffer)  # Sample action from policy
 
         if len(memory) > batch_size:
-            print('Trying update ...')
             # Number of updates per step in environment
             for i in range(updates_per_step):
                 # Update parameters of all the networks
-                critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, batch_size, updates)
+                critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, batch_size, his_len, updates)
 
                 writer.add_scalar('loss/critic_1', critic_1_loss, updates)
                 writer.add_scalar('loss/critic_2', critic_2_loss, updates)

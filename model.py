@@ -118,6 +118,7 @@ class GaussianPolicy(nn.Module):
 
         if self.model in ["BERT", "GTrXL"]:
             # Continuous embedding
+            # print(state.shape)
             state = self.embedding(state)
             # state_past, state_current = state[:-1, :], state[-1, :].expand(1,-1)
 
@@ -129,7 +130,8 @@ class GaussianPolicy(nn.Module):
             try:
                 state = state[:,[0],:]
             except:
-                print(state.shape)
+                # print(state.shape)
+                raise Exception("State post transformer shape error")
 
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))

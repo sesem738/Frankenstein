@@ -36,6 +36,7 @@ class SAC(object):
         self.policy_optim = Adam(self.policy.parameters(), lr=self.lr)
 
     def select_action(self, state, evaluate=False):
+
         state = torch.Tensor(state).unsqueeze(0)
         if evaluate is False:
             action, _, _ = self.policy.sample(state)
@@ -43,9 +44,9 @@ class SAC(object):
             _, _, action = self.policy.sample(state)
         return action.detach().cpu().numpy()[0]
 
-    def update_parameters(self, memory, batch_size, updates):
+    def update_parameters(self, memory, batch_size, his_len, updates):
         # Sample a batch from memory
-        state_batch, action_batch, next_state_batch, reward_batch, mask_batch = memory.prior_samples(batch_size, his_len=5)
+        state_batch, action_batch, next_state_batch, reward_batch, mask_batch = memory.prior_samples(batch_size, his_len)
 
         state_batch = torch.Tensor(state_batch)
         next_state_batch = torch.Tensor(next_state_batch)
